@@ -1,0 +1,20 @@
+{
+  "incident_id": "INC-2026-001",
+  "title": "Подозрительный вход в корпоративную почту",
+  "severity": "high",
+  "status": "contained",
+  "detected_at": "2026-11-18T09:14:00+07:00",
+  "summary": "Учётная запись использовалась с нетипичного адреса, после чего создано правило пересылки.",
+  "timeline": [
+    { "timestamp": "2026-11-18T09:14:00+07:00", "event": "алерт SIEM о входе из нетипичной ASN" },
+    { "timestamp": "2026-11-18T09:31:00+07:00", "event": "обнаружено правило пересылки на внешний адрес" },
+    { "timestamp": "2026-11-18T09:52:00+07:00", "event": "сессия отозвана, пароль сменён" }
+  ],
+  "affected_assets": ["mail-01.corp.test", "user: a.ivanov"],
+  "indicators": ["203.0.113.45", "forward-rule: external"],
+  "root_cause": "Скомпрометированный пароль без второго фактора",
+  "actions": [
+    { "action": "включить MFA для всех ящиков", "owner": "lead", "status": "in-progress" },
+    { "action": "проверить журналы за 30 дней", "owner": "dfir", "status": "done" }
+  ]
+}

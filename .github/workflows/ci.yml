@@ -1,0 +1,52 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  report-schema:
+    name: report-schema
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Validate example report
+        run: python3 schema/validate.py report.example.json
+
+  docs:
+    name: docs
+    uses: nto-corpsec/.github/.github/workflows/reusable-docs.yml@main
+
+  no-leak:
+    name: no-leak
+    uses: nto-corpsec/.github/.github/workflows/reusable-no-leak.yml@main
+
+  gate:
+    name: gate
+    if: always()
+    needs: [report-schema, docs, no-leak]
+    runs-on: ubuntu-latest
+    env:
+      RESULT_REPORT_SCHEMA: ${{ needs.report-schema.result }}
+      RESULT_DOCS: ${{ needs.docs.result }}
+      RESULT_NO_LEAK: ${{ needs.no-leak.result }}
+    steps:
+      - name: All gates must pass
+        run: |
+          set -euo pipefail
+          failed=0
+          echo "report-schema: $RESULT_REPORT_SCHEMA"
+          [ "$RESULT_REPORT_SCHEMA" = "success" ] || failed=1
+          echo "docs: $RESULT_DOCS"
+          [ "$RESULT_DOCS" = "success" ] || failed=1
+          echo "no-leak: $RESULT_NO_LEAK"
+          [ "$RESULT_NO_LEAK" = "success" ] || failed=1
+          exit "$failed"
